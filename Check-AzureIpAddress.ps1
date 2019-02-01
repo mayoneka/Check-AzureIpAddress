@@ -134,15 +134,21 @@ $response = Invoke-WebRequest -Uri $xmlFileUri
 [xml]$xmlResponse = [System.Text.Encoding]::UTF8.GetString($response.Content)
 
 # Check IP address
+$flag = 0
 $xmlResponse.AzurePublicIpAddresses.Region | foreach{
-    $Region = $_.Name
+    $temp = $_.Name
     $_.IpRange | foreach{
         # Check IP address
         if(Check-UInt32IPv4AddressRange -UInt32TargetIPv4Address (ConvertTo-UInt32IPv4Address $IpAddress) -UInt32StartIPv4Address (ConvertTo-UInt32IPv4StartAddress $_.Subnet) -UInt32EndIPv4Address (ConvertTo-UInt32IPv4EndAddress $_.Subnet)){
-            Write-Host "$IpAddress is in Azure $Region region." -ForegroundColor Green
-            break
+            $flag = 1
+            $Region = $temp
         }
     }
 }
-Write-Host "$IpAddress is not in Azure." -ForegroundColor Red
-Start-Process "https://db-ip.com/$IpAddress"
+
+if ($flag){
+    Write-Host "$IpAddress is in Azure $Region region." -ForegroundColor Green
+}else{
+    Write-Host "$IpAddress is not in Azure." -ForegroundColor Red
+    # Start-Process "https://db-ip.com/$IpAddress"
+}
